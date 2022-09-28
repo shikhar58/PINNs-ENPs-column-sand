@@ -71,34 +71,43 @@ for j in range(10000,10500):
     a[j-10000]=dist[int(b[j-10000])]
 to know that it is equidistant    
 
-
+"""
+#resampling code
 j=0
 import random
+import math
 
-fp=np.concatenate((x_fp,y_fp,t_fp),1)
-gen=[]
+
 def adap(x,y,t):
-    fpp=np.concatenate((x/10,y/4,t/36000),1)
+    gen=[]
+    fpp=np.array([x/10,y/4,t/36000])
     print(fpp)
-    for j in range(1000):
+    for j in range(10):
         p=random.uniform(-1, 1)
         xnew=fpp+p*0.01666666
-        print(xnew)
-        dist=math.dist(fpp[0], xnew[0])
+        #print(xnew)
+        dist=math.dist(fpp, xnew)
         if dist<0.016666:
-            gen.append(xnew[0])
-    return gen
+            a=np.array([xnew[0]*10,xnew[1]*4,xnew[2]*36000])
+            if a[0]>0 and a[0]<10 and a[1]>0 and a[1]<4 and a[2]>0 and a[2]<36000:
+                gen.append(a)
+    return np.array(gen)
 
+def resam(fp):
+    gen_fin=[]
+    for i in range(len(fp)):
+        print(i)
+        gen=np.array(adap(fp[i,0],fp[i,1],fp[i,2]))
+        gen_fin.append(gen)
 
-gen=np.array(adap(fp[0:2,0:1],fp[0:2,1:2],fp[0:2,2:3]))
-points=gen
-scale=np.array([10,4,36000])
-for i in range(3):
-    points[:,i]=gen[:,i]*scale[i]
-scale=np.reshape(scale,(3,1))
-points=np.matmul(gen,scale)
+    ada=np.zeros([1,3])
+    for n,i in enumerate(gen_fin):
+        print(n)
+        if len(i)>0:
+            ada=np.concatenate((ada,i),0)
+    return ada
 
-"""
+#sampling code
 def sampling(minval,maxval,var,N):
     X = minval + (maxval-minval)*lhs(var, N)
     return X
@@ -290,30 +299,32 @@ for it in range(1,nIter+1):
         loss_value=loss.eval(feed_dict=tf_dict,session=sess)
         #por_value=por.eval(session=sess)
         print(it,i,loss_value)
-    if it%100==0:
+    if it%200==0:
 
         r_value=f.eval(feed_dict=tf_dict,session=sess)
         r_sum= np.sum(r_value*r_value)
 
         prob_value=r_value*r_value/r_sum
 
-        new=np.zeros(500)
-        for i in range(500):
+        new=np.zeros(1000)
+        for i in range(1000):
             new[i]=int(choices(range(len(prob_value)),prob_value)[0])  #index of fp selected according to the fp
             new[i]=int(new[i])
     
-        prob_selected=[prob_value[int(i)] for i in new]
+        prob_selected=[prob_value[int(i)] for i in new]    
 
         newp=np.array([fp[int(i)] for i in new])
-
+        
+        resampled=resam(newp)
+        print(resampled)
+        print("%%%%%%%", len(resampled))
         bs1=500
         tot1=500
-        nIter=500
-        for it in range(nIter):
-            for i in range(0,tot1,bs1):
-                tf_dict = {x_i: x_ic, y_i: y_ic, t_i: t_ic, x_dcb: x_dc, y_dcb: y_dc, t_dcb: t_dc,c_dct:c_dc, x_neb: x_neu, y_neb: y_neu, t_neb: t_neu, x_nebdc: x_neudc, y_nebdc: y_neudc, t_nebdc: t_neudc, x_f: newp[i:i+bs1,0:1], y_f:newp[i:i+bs1,1:2], t_f:newp[i:i+bs1,2:3]}
-                sess.run(train_op_Adam, tf_dict)
-                loss_value=loss.eval(feed_dict=tf_dict,session=sess)
+        nIter1=1000
+        for it in range(nIter1):
+            tf_dict = {x_i: x_ic, y_i: y_ic, t_i: t_ic, x_dcb: x_dc, y_dcb: y_dc, t_dcb: t_dc,c_dct:c_dc, x_neb: x_neu, y_neb: y_neu, t_neb: t_neu, x_nebdc: x_neudc, y_nebdc: y_neudc, t_nebdc: t_neudc, x_f: resampled[:,0:1], y_f:resampled[:,1:2], t_f:resampled[:,2:3]}
+            sess.run(train_op_Adam, tf_dict)
+            loss_value=loss.eval(feed_dict=tf_dict,session=sess)
                 #por_value=por.eval(session=sess)
             print("inside", it,i,loss_value)
         c_out=(c_f).eval(feed_dict=tf_pred,session=sess)
