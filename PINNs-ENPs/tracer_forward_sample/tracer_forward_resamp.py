@@ -93,6 +93,10 @@ def sampling(minval,maxval,var,N):
     X = minval + (maxval-minval)*lhs(var, N)
     return X
 
+data_f=sampling(np.array([0,0]),np.array([1,6000]),2,10000)
+x_lhs=data_f[:,0:1]
+t_lhs=data_f[:,1:2]
+
 """
 data_f=sampling(np.array([0,0]),np.array([1,3600]),2,20000)
 x_fp=data_f[:,0:1]
@@ -327,14 +331,14 @@ def adap(x,t):
         px=random.uniform(-1, 1)
         pt=random.uniform(-1, 1)
         print(px)
-        xnew=fpp[0]+px
+        xnew=fpp[0]+px  #this works when we have 1 unit of distance seperation, if it is not one, we should take into accorunt distance, ie there
         tnew=fpp[1]+pt
         fppnew=np.array([xnew,tnew])
         #random points generated with range of 1,1 to -1-1 for the point 0 0
         #now we need to eliminate teh points who are far away
         print(np.shape(fppnew),np.shape(fpp))
         dist=math.dist(fpp, fppnew)
-        if dist<1:
+        if dist<1:  #again this should be the minimum distance
             a=np.array([fppnew[0]*0.02,fppnew[1]*20])
             if a[0]>0 and a[0]<1 and a[1]>0 and a[1]<6000 and a[1]>0:
                 gen.append(a)
@@ -419,12 +423,28 @@ plt.plot(aa[:,:], cdcb[:,:], 'r', label="actual")
 plt.plot(aa[:,:], c_dc[:,:], 'g', label="actual")
 
 
-plt.scatter(xx_f*5000,tt_f, marker='.')
+plt.scatter(xx_f,tt_f, marker='.')
 #plt.scatter(xx_new,tt_new, marker='.')
-plt.scatter(resamp[:,0]*5000,resamp[:,1], marker='*')
-plt.scatter(refinep[:,0]*5000,refinep[:,1], marker='.')
-plt.ylim(-1, 1000.0)
-plt.xlim(-0.01, 1000)
+plt.scatter(resamp[:,0],resamp[:,1], marker='*')
+plt.scatter(refinep[:,0],refinep[:,1], marker='.')
+plt.ylim(350, 410.0)
+plt.xlim(-0.01, 0.06)
 plt.show()
 
+
+plt.scatter(x_lhs,t_lhs, marker='.')
+
+fp_lhs=np.concatenate((x_lhs/0.02,t_lhs/20),1)
+a=np.zeros(len(fp_lhs))
+b=np.zeros(len(fp_lhs))
+for j in range(len(fp_lhs)):
+    print(j)
+    dist=[math.dist(fp_lhs[j], fp_lhs[i]) for i in range(len(fp_lhs)) if i!=j]
+    #a[j]=np.min([math.dist(fp[j], fp[i]) for i in range(len(fp)) if i!=j])
+    print(j)
+    b[j]=np.argmin(dist)
+    a[j]=dist[int(b[j])]
+
+#hypothesis..we may not need myriads of sampling method wth this method
+#show this by comparing lhs and unifrom without your method and with your method
 
