@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Sep 29 18:34:57 2022
+
+@author: shikhar
+"""
 
 
 from pyDOE import lhs
@@ -382,8 +388,8 @@ for it in range(1,nIter):
         #resampled=resam(newp)
         #print(resampled)
         #print("%%%%%%%", len(resampled))
-        xx_new=np.concatenate((xx_f,refinep[:,0:1]),0)
-        tt_new=np.concatenate((tt_f,refinep[:,1:2]),0)
+        xx_new=np.concatenate((xx_f,resamp[:,0:1]),0)
+        tt_new=np.concatenate((tt_f,resamp[:,1:2]),0)
         
         tf_dict = {x_dcb: x_lb, t_dcb: t_lb, x_neb: x_rb, t_neb: t_rb, x_i: x_ic, t_i: t_ic, x_f: xx_new, t_f: tt_new}
 

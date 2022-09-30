@@ -52,11 +52,11 @@ t_fp = t[idx,:]
 """
 
 
-btcpd = pd.read_csv("tracer_inversebtc.csv")
+#btcpd = pd.read_csv("tracer_inversebtc.csv")
 
 
 
-btc=btcpd.iloc[:,:].values
+#btc=btcpd.iloc[:,:].values
 
 
 layers_c=[2, 50, 50, 50, 50, 50, 1]
