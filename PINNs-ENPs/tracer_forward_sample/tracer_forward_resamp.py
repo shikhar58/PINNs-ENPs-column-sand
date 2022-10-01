@@ -368,15 +368,16 @@ target=500
 k=2
 c=0
 losstot=[]
-nIter=1800
+nIter=6000
 for it in range(1,nIter):
     sess.run(train_op_Adam, tf_dict)
     print(it)
     #fv=f.eval(feed_dict=tf_dict,session=sess)
     #print(it,loss_value,tf.reduce_sum(tf.square(c_dcb-c_dc)).eval(feed_dict=tf_dict,session=sess),tf.reduce_sum(tf.square(f)).eval(feed_dict=tf_dict,session=sess))
     loss_value=loss.eval(feed_dict=tf_dict0,session=sess)
-    if it%300==0:
-        losstot.append(loss_value)
+    losstot.append(loss_value)
+    if it%1000==0:
+
         r_val=f.eval(feed_dict=tf_dict0,session=sess)
        #actual points which got resampled
         resamp=errorpoints(r_val)
@@ -412,6 +413,9 @@ for j in range(1):
 plt.scatter(xx_f[:500]/0.01,tt_f[:500]/20)
 """
 
+btcpd = pd.read_csv("t.csv")
+
+btc=btcpd.iloc[:,:].values
 
 aa=np.array([x for x in range(3001)])
 aa=aa[:,None]
@@ -434,6 +438,8 @@ plt.show()
 
 plt.scatter(x_lhs,t_lhs, marker='.')
 
+
+
 fp_lhs=np.concatenate((x_lhs/0.02,t_lhs/20),1)
 a=np.zeros(len(fp_lhs))
 b=np.zeros(len(fp_lhs))
@@ -448,3 +454,20 @@ for j in range(len(fp_lhs)):
 #hypothesis..we may not need myriads of sampling method wth this method
 #show this by comparing lhs and unifrom without your method and with your method
 
+colors = cm.rainbow(np.linspace(0, 1, len(a)))
+for y, c in zip(a, colors):
+    plt.scatter(x, y, color=c)
+
+df = pd.DataFrame(a, columns=["x"])
+sns.scatterplot(data=df, x="x", y="y")
+import seaborn as sns
+sns.scatterplot(data=df, x="x", y="y")
+sns.color_palette("Spectral", as_cmap=True)
+
+cmap=mpl.cm.viridis
+# Plot...
+fig, ax=plt.scatter(x_lhs, t_lhs,c=a, cmap=cmap, s=1)
+import matplotlib as mpl
+fig.colorbar(mpl.cm.ScalarMappable(cmap=cmap),
+             cax=ax, orientation='horizontal', label='Some Units')
+plt.show()

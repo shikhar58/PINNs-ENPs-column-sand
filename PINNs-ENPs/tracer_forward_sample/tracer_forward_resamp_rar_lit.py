@@ -366,18 +366,21 @@ def resam(fp):
 sess=tf.compat.v1.Session()
 init = tf.compat.v1.global_variables_initializer()
 sess.run(init)   
-target=500
+target=80
 k=2
 c=0
 losstot=[]
-nIter=1800
+nIter=6000
+
+xx_new=xx_f
+tt_new=tt_f
 for it in range(1,nIter):
     sess.run(train_op_Adam, tf_dict)
     print(it)
     #fv=f.eval(feed_dict=tf_dict,session=sess)
     #print(it,loss_value,tf.reduce_sum(tf.square(c_dcb-c_dc)).eval(feed_dict=tf_dict,session=sess),tf.reduce_sum(tf.square(f)).eval(feed_dict=tf_dict,session=sess))
     loss_value=loss.eval(feed_dict=tf_dict0,session=sess)
-    if it%300==0:
+    if it%1000==0:
         losstot.append(loss_value)
         r_val=f.eval(feed_dict=tf_dict0,session=sess)
        #actual points which got resampled
@@ -388,8 +391,8 @@ for it in range(1,nIter):
         #resampled=resam(newp)
         #print(resampled)
         #print("%%%%%%%", len(resampled))
-        xx_new=np.concatenate((xx_f,resamp[:,0:1]),0)
-        tt_new=np.concatenate((tt_f,resamp[:,1:2]),0)
+        xx_new=np.concatenate((xx_new,resamp[:,0:1]),0)
+        tt_new=np.concatenate((tt_new,resamp[:,1:2]),0)
         
         tf_dict = {x_dcb: x_lb, t_dcb: t_lb, x_neb: x_rb, t_neb: t_rb, x_i: x_ic, t_i: t_ic, x_f: xx_new, t_f: tt_new}
 
