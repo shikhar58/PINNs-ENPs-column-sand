@@ -52,7 +52,7 @@ x=np.linspace(0, 1, num=101)
 x=x[:,None]
 
 
-t=np.linspace(0, 6000, num=3001)
+t=np.linspace(0, 6000, num=51)
 
 t=t[:,None]
 """
@@ -109,7 +109,7 @@ x=np.linspace(0, 1, num=51)
 
 x=x[:,None]
 
-t_f=np.linspace(0, 6000, num=301)
+t_f=np.linspace(0, 6000, num=51)
 
 t_f=t_f[:,None]
 
@@ -286,7 +286,7 @@ else:
 #tf.reduce_sum(abs(f)).eval(feed_dict=tf_dict,session=sess)
 #add square 
 #loss = w_ic*tf.reduce_sum(tf.square(c_ic))+w_is*tf.reduce_sum(tf.square(s_ic))+w_dc*tf.reduce_sum(tf.square(c_dcb-c_dc))+w_fc*tf.reduce_sum(tf.square(fc))+w_fs*tf.reduce_sum(tf.square(fs))+w_j*tf.reduce_sum(tf.square(j))
-loss = w_ic*tf.reduce_sum(tf.square(c_ic))+w_dc*tf.reduce_sum(tf.square(c_dcb-c_dc))+w_fc*tf.reduce_sum(tf.square(f))+w_j*tf.reduce_sum(tf.square(j))
+loss= w_ic*tf.reduce_sum(tf.square(c_ic))/len(x_ic)+w_dc*tf.reduce_sum(tf.square(c_dcb-c_dc))/len(x_lb)+w_fc*tf.reduce_sum(tf.square(f))/(len(xx_f))+w_j*tf.reduce_sum(tf.square(j))/len(x_rb)
 
 #loss = tf.reduce_sum(tf.square(c_ic))+10*tf.reduce_sum(tf.square(s_ic))+tf.reduce_sum(tf.square(c_dcb-c_dc))+100*tf.reduce_sum(tf.square(fc))+10000*tf.reduce_sum(tf.square(fs))+tf.reduce_sum(tf.square(j))
 
@@ -389,11 +389,11 @@ for it in range(1,nIter):
         #print("%%%%%%%", len(resampled))
         xx_new=np.concatenate((xx_f,refinep[:,0:1]),0)
         tt_new=np.concatenate((tt_f,refinep[:,1:2]),0)
-        
+        loss= w_ic*tf.reduce_sum(tf.square(c_ic))/len(x_ic)+w_dc*tf.reduce_sum(tf.square(c_dcb-c_dc))/len(x_lb)+w_fc*tf.reduce_sum(tf.square(f))/(len(xx_new))+w_j*tf.reduce_sum(tf.square(j))/len(x_rb)
         tf_dict = {x_dcb: x_lb, t_dcb: t_lb, x_neb: x_rb, t_neb: t_rb, x_i: x_ic, t_i: t_ic, x_f: xx_new, t_f: tt_new}
 
     print(it,loss_value)
-    if abs(loss_value)<0.01:
+    if abs(loss_value)<0.000000001:
         break
 
 
@@ -413,11 +413,11 @@ for j in range(1):
 plt.scatter(xx_f[:500]/0.01,tt_f[:500]/20)
 """
 
-btcpd = pd.read_csv("t.csv")
+btcpd = pd.read_csv("tracer_inversebtc.csv")
 
 btc=btcpd.iloc[:,:].values
 
-aa=np.array([x for x in range(3001)])
+aa=np.array([x for x in range(51)])
 aa=aa[:,None]
 #c=neural_net(tf.concat([x1, t1], 1), weights, biases)
 cneb=c_neb.eval(feed_dict=tf_dict,session=sess)
@@ -425,7 +425,7 @@ cdcb=c_dcb.eval(feed_dict=tf_dict,session=sess)
 plt.plot(aa[:,:], cneb[:,:], marker='.', label="actual")
 plt.plot(aa[:,:], cdcb[:,:], 'r', label="actual")
 plt.plot(aa[:,:], c_dc[:,:], 'g', label="actual")
-
+plt.plot(aa[:,:], btc[:,:], 'g', label="actual")
 
 plt.scatter(xx_f,tt_f, marker='.')
 #plt.scatter(xx_new,tt_new, marker='.')
@@ -437,7 +437,6 @@ plt.show()
 
 
 plt.scatter(x_lhs,t_lhs, marker='.')
-
 
 
 fp_lhs=np.concatenate((x_lhs/0.02,t_lhs/20),1)
@@ -466,8 +465,20 @@ sns.color_palette("Spectral", as_cmap=True)
 
 cmap=mpl.cm.viridis
 # Plot...
-fig, ax=plt.scatter(x_lhs, t_lhs,c=a, cmap=cmap, s=1)
+fig, ax=plt.scatter(x_lhs, t_lhs,c=a, cmap=cmap, s=4)
 import matplotlib as mpl
 fig.colorbar(mpl.cm.ScalarMappable(cmap=cmap),
              cax=ax, orientation='horizontal', label='Some Units')
 plt.show()
+
+loss_trad = pd.read_csv("loss_trad.csv")
+
+losstrad=loss_trad.iloc[:,:].values
+
+bb=np.array([x for x in range(6000)])
+plt.plot(bb, losstot, 'g', label="actual")
+
+plt.plot(bb, losstrad[:,1], 'r', label="actual")
+
+plt.plot(bb, losstot-losstrad[:,1], 'r', label="actual")
+
