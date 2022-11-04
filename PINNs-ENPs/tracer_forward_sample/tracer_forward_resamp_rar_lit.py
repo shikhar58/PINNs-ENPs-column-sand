@@ -6,6 +6,7 @@ Created on Thu Sep 29 18:34:57 2022
 """
 
 
+
 from pyDOE import lhs
 import sys
 sys.path.append(r"C:\Users\shikhar\PycharmProjects\mesh\autoencoder-for-denoising-coarser-mesh-based-numerical-solution")
@@ -58,7 +59,7 @@ x=np.linspace(0, 1, num=101)
 x=x[:,None]
 
 
-t=np.linspace(0, 6000, num=3001)
+t=np.linspace(0, 6000, num=101)
 
 t=t[:,None]
 """
@@ -107,11 +108,11 @@ t_fp=data_f[:,1:2]
 X_fp = np.concatenate((x_fp,t_fp), 1)
 """
 
-x=np.linspace(0, 1, num=51)
+x=np.linspace(0, 1, num=101)
 
 x=x[:,None]
 
-t_f=np.linspace(0, 6000, num=301)
+t_f=np.linspace(0, 6000, num=101)
 
 t_f=t_f[:,None]
 
@@ -288,7 +289,7 @@ else:
 #tf.reduce_sum(abs(f)).eval(feed_dict=tf_dict,session=sess)
 #add square 
 #loss = w_ic*tf.reduce_sum(tf.square(c_ic))+w_is*tf.reduce_sum(tf.square(s_ic))+w_dc*tf.reduce_sum(tf.square(c_dcb-c_dc))+w_fc*tf.reduce_sum(tf.square(fc))+w_fs*tf.reduce_sum(tf.square(fs))+w_j*tf.reduce_sum(tf.square(j))
-loss = w_ic*tf.reduce_sum(tf.square(c_ic))+w_dc*tf.reduce_sum(tf.square(c_dcb-c_dc))+w_fc*tf.reduce_sum(tf.square(f))+w_j*tf.reduce_sum(tf.square(j))
+loss= w_ic*tf.reduce_sum(tf.square(c_ic))/len(x_ic)+w_dc*tf.reduce_sum(tf.square(c_dcb-c_dc))/len(x_lb)+w_fc*tf.reduce_sum(tf.square(f))/(len(xx_f))+w_j*tf.reduce_sum(tf.square(j))/len(x_rb)
 
 #loss = tf.reduce_sum(tf.square(c_ic))+10*tf.reduce_sum(tf.square(s_ic))+tf.reduce_sum(tf.square(c_dcb-c_dc))+100*tf.reduce_sum(tf.square(fc))+10000*tf.reduce_sum(tf.square(fs))+tf.reduce_sum(tf.square(j))
 
@@ -366,41 +367,50 @@ def resam(fp):
 sess=tf.compat.v1.Session()
 init = tf.compat.v1.global_variables_initializer()
 sess.run(init)   
-target=80
+target=500
 k=2
 c=0
 losstot=[]
-nIter=6000
+nIter=20000
 
 xx_new=xx_f
 tt_new=tt_f
+
+import time
+
+# get the start time
+st = time.time()
+
 for it in range(1,nIter):
     sess.run(train_op_Adam, tf_dict)
     print(it)
     #fv=f.eval(feed_dict=tf_dict,session=sess)
     #print(it,loss_value,tf.reduce_sum(tf.square(c_dcb-c_dc)).eval(feed_dict=tf_dict,session=sess),tf.reduce_sum(tf.square(f)).eval(feed_dict=tf_dict,session=sess))
     loss_value=loss.eval(feed_dict=tf_dict0,session=sess)
-    if it%1000==0:
-        losstot.append(loss_value)
+    losstot.append(loss_value)
+    if it%2000==0:
         r_val=f.eval(feed_dict=tf_dict0,session=sess)
        #actual points which got resampled
         resamp=errorpoints(r_val)
         
-        refinep=resam(resamp)   #here gen_fin is list of refined point for each oriningal point, and aa is the list of all those refined points
-
+        #refinep=resam(resamp)   #here gen_fin is list of refined point for each oriningal point, and aa is the list of all those refined points
+#this above command is called but not used
         #resampled=resam(newp)
         #print(resampled)
         #print("%%%%%%%", len(resampled))
-        xx_new=np.concatenate((xx_new,resamp[:,0:1]),0)
-        tt_new=np.concatenate((tt_new,resamp[:,1:2]),0)
+        xx_new=np.concatenate((xx_f,resamp[:,0:1]),0)
+        tt_new=np.concatenate((tt_f,resamp[:,1:2]),0)
         
         tf_dict = {x_dcb: x_lb, t_dcb: t_lb, x_neb: x_rb, t_neb: t_rb, x_i: x_ic, t_i: t_ic, x_f: xx_new, t_f: tt_new}
 
     print(it,loss_value)
-    if abs(loss_value)<0.01:
+    if abs(loss_value)<5e-6:
         break
 
+et = time.time()
 
+# get the execution time
+elapsed_time = et - st
 
 """
 to CONFIRM THE DISTANCE IS ONE out thedistance
@@ -418,14 +428,27 @@ plt.scatter(xx_f[:500]/0.01,tt_f[:500]/20)
 """
 
 
-aa=np.array([x for x in range(3001)])
+btcpd = pd.read_csv("tracer_inversebtc.csv")
+
+btc=btcpd.iloc[:,:].values
+
+aa=np.array([x for x in range(101)])
 aa=aa[:,None]
+
+btc_imp=np.array([j for i,j in enumerate(btc) if  i% (3000/100)==0])
+
 #c=neural_net(tf.concat([x1, t1], 1), weights, biases)
 cneb=c_neb.eval(feed_dict=tf_dict,session=sess)
 cdcb=c_dcb.eval(feed_dict=tf_dict,session=sess)
 plt.plot(aa[:,:], cneb[:,:], marker='.', label="actual")
 plt.plot(aa[:,:], cdcb[:,:], 'r', label="actual")
 plt.plot(aa[:,:], c_dc[:,:], 'g', label="actual")
+plt.plot(aa[:,:], btc_imp[:,:], 'g', label="actual")
+
+from sklearn.metrics import r2_score
+
+r2 = r2_score(btc_imp[:,:], cneb[:,:])
+
 
 
 plt.scatter(xx_f*5000,tt_f, marker='.')
@@ -435,5 +458,12 @@ plt.scatter(refinep[:,0]*5000,refinep[:,1], marker='.')
 plt.ylim(-1, 1000.0)
 plt.xlim(-0.01, 1000)
 plt.show()
+
+plt.plot(range(999),losstot[9000:10000])
+
+plt.ylim(0,0.00001)
+
+plt.show()
+
 
 

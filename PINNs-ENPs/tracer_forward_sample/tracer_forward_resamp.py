@@ -1,5 +1,3 @@
-
-
 from pyDOE import lhs
 import sys
 sys.path.append(r"C:\Users\shikhar\PycharmProjects\mesh\autoencoder-for-denoising-coarser-mesh-based-numerical-solution")
@@ -304,6 +302,8 @@ train_op_Adam = optimizer_Adam.minimize(loss,var_list=[weights_c,biases_c])
 import random
 import math
 
+
+#this just tells the existing points where error is more
 def errorpoints(r_value):
     r_sum= np.sum(r_value**k)
 
@@ -319,7 +319,9 @@ def errorpoints(r_value):
         
     return(newpt)
 
-refine=2
+refine=4
+
+#THIS IS SECONDARY FUNCTION. used inside a function. it gives refined points for a particluar point
 def adap(x,t):
     gen=[]
     fpp=np.array([x/0.02,t/20])
@@ -346,7 +348,7 @@ def adap(x,t):
     return np.array(gen)
 
 #write code for definite number of refinement
-
+#this code takes all the cordinates, and refine for all the points using above function. Then send it back
 def resam(fp):
     gen_fin=[]
     for i in range(len(fp)):
@@ -364,11 +366,17 @@ def resam(fp):
 sess=tf.compat.v1.Session()
 init = tf.compat.v1.global_variables_initializer()
 sess.run(init)   
-target=500
+target=500  #points to be selected for error refinement
 k=2
 c=0
 losstot=[]
-nIter=6000
+nIter=20000
+
+import time
+
+# get the start time
+st = time.time()
+
 for it in range(1,nIter):
     sess.run(train_op_Adam, tf_dict)
     print(it)
@@ -376,7 +384,7 @@ for it in range(1,nIter):
     #print(it,loss_value,tf.reduce_sum(tf.square(c_dcb-c_dc)).eval(feed_dict=tf_dict,session=sess),tf.reduce_sum(tf.square(f)).eval(feed_dict=tf_dict,session=sess))
     loss_value=loss.eval(feed_dict=tf_dict0,session=sess)
     losstot.append(loss_value)
-    if it%1000==0:
+    if it%2000==0:
 
         r_val=f.eval(feed_dict=tf_dict0,session=sess)
        #actual points which got resampled
@@ -386,15 +394,20 @@ for it in range(1,nIter):
 
         #resampled=resam(newp)
         #print(resampled)
-        #print("%%%%%%%", len(resampled))
+        #print("%%%%%%%", len(resampled))  
         xx_new=np.concatenate((xx_f,refinep[:,0:1]),0)
-        tt_new=np.concatenate((tt_f,refinep[:,1:2]),0)
+        tt_new=np.concatenate((tt_f,refinep[:,1:2]),0)  #it doesnt take the previous refined points
         loss= w_ic*tf.reduce_sum(tf.square(c_ic))/len(x_ic)+w_dc*tf.reduce_sum(tf.square(c_dcb-c_dc))/len(x_lb)+w_fc*tf.reduce_sum(tf.square(f))/(len(xx_new))+w_j*tf.reduce_sum(tf.square(j))/len(x_rb)
         tf_dict = {x_dcb: x_lb, t_dcb: t_lb, x_neb: x_rb, t_neb: t_rb, x_i: x_ic, t_i: t_ic, x_f: xx_new, t_f: tt_new}
 
     print(it,loss_value)
-    if abs(loss_value)<0.000000001:
+    if abs(loss_value)<5e-6:
         break
+
+et = time.time()
+
+# get the execution time
+elapsed_time = et - st
 
 
 
@@ -419,13 +432,20 @@ btc=btcpd.iloc[:,:].values
 
 aa=np.array([x for x in range(51)])
 aa=aa[:,None]
+
+btc_imp=np.array([j for i,j in enumerate(btc) if  i% 60==0])
+
 #c=neural_net(tf.concat([x1, t1], 1), weights, biases)
 cneb=c_neb.eval(feed_dict=tf_dict,session=sess)
 cdcb=c_dcb.eval(feed_dict=tf_dict,session=sess)
 plt.plot(aa[:,:], cneb[:,:], marker='.', label="actual")
 plt.plot(aa[:,:], cdcb[:,:], 'r', label="actual")
 plt.plot(aa[:,:], c_dc[:,:], 'g', label="actual")
-plt.plot(aa[:,:], btc[:,:], 'g', label="actual")
+plt.plot(aa[:,:], btc_imp[:,:], 'g', label="actual")
+
+from sklearn.metrics import r2_score
+
+r2 = r2_score(btc_imp[:,:], cneb[:,:])
 
 plt.scatter(xx_f,tt_f, marker='.')
 #plt.scatter(xx_new,tt_new, marker='.')
@@ -482,3 +502,10 @@ plt.plot(bb, losstrad[:,1], 'r', label="actual")
 
 plt.plot(bb, losstot-losstrad[:,1], 'r', label="actual")
 
+
+
+plt.plot(range(len(losstot)),losstot)
+
+plt.ylim(0,0.00001)
+
+plt.show()
