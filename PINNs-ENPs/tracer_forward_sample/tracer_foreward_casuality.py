@@ -258,6 +258,23 @@ c_f=neural_net(tf.concat([x_f, t_f], 1), weights_c,biases_c)
 fc,_=net_NS(x_f,t_f,c_f,por,alpha)
 
 _,j=net_NS(x_neb,t_neb,c_neb,por,alpha)
+
+fv=fc.eval(feed_dict=tf_dict,session=sess)
+
+import math
+"""
+for i in range(len(fv)):
+    idx=int(i/50)
+    wt=np.sum(abs(fv[:idx,:]))
+    wtf=math.exp(-100*wt)
+"""    
+def losswt(fc):
+    size=tf.size(fc)
+    for i in range(size):
+        wt[i]=tf.reduce_sum(fc[:size])
+    
+    
+
 """
 #adding 36 really worked out
 loss_ic=36*tf.reduce_sum(abs(c_ic))
