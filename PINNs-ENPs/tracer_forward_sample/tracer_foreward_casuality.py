@@ -313,18 +313,11 @@ loss = w_ic*tf.reduce_sum(tf.square(c_ic))+w_dc*tf.reduce_sum(tf.square(c_dcb-c_
 
 #loss = tf.reduce_sum(tf.square(c_ic))+10*tf.reduce_sum(tf.square(s_ic))+tf.reduce_sum(tf.square(c_dcb-c_dc))+100*tf.reduce_sum(tf.square(fc))+10000*tf.reduce_sum(tf.square(fs))+tf.reduce_sum(tf.square(j))
 
-
-
 optimizer_Adam = tf.compat.v1.train.AdamOptimizer(
     learning_rate=0.005, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False,
     name='Adam')
 
-
-
 train_op_Adam = optimizer_Adam.minimize(loss,var_list=[weights_c,biases_c])  
-
-
-
 
 sess=tf.compat.v1.Session()
 init = tf.compat.v1.global_variables_initializer()
@@ -344,15 +337,10 @@ for it in range(nIter):
     if abs(loss_value)<0.01:
         break
 
-
-
 x1=tf.compat.v1.placeholder(tf.float32, shape=[None, x_ic.shape[1]])
 t1=tf.compat.v1.placeholder(tf.float32, shape=[None, x_ic.shape[1]])
 
-
-
 tf1 = {x1: x_ic, t1: t1np}
-
 
 aa=np.array([x for x in range(3001)])
 aa=aa[:,None]
@@ -363,17 +351,13 @@ plt.plot(aa[:,:], cneb[:,:], marker='.', label="actual")
 plt.plot(aa[:,:], cdcb[:,:], 'r', label="actual")
 plt.plot(aa[:,:], c_dc[:,:], 'g', label="actual")
 
-
-
 t1np=np.array([x for x in range(3001)])
 t1np=t1np[:,None]
 x1np = np.empty((3001,1))
 x1np.fill(1)
 
-
 t1np = np.empty((len(x_ic),1))
 t1np.fill(6000)
-
 
 tf1 = {x1: x1np, t1: t1np}
 tf1 = {x1: x_ic, t1: t1np}
