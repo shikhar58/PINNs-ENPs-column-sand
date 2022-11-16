@@ -241,11 +241,9 @@ maxval=np.array([1,6000])
 
 #tf_dict = { x_i: x_ic, y_i: y_ic, x_f: x_fp, y_f:y_fp, t_f:t_fp}
 
-
 tf_dict = {x_dcb: x_lb, t_dcb: t_lb, x_neb: x_rb, t_neb: t_rb, x_i: x_ic, t_i: t_ic, x_f: xx_f, t_f: tt_f}
 
 #tf_dict = { x_i: x_ic, y_i: y_ic, x_f: x_fp, y_f:y_fp, t_f:t_fp}
-
 
 #c_dcb=neural_net(tf.concat([x_dcb, y_dcb], 1), weights_ib, biases_ib,np.array([0,1.5]),np.array([0,2.5]))
 #c_dcb=neural_net(tf.concat([x_dcb, y_dcb], 1), weights_dcb, biases_dcb,np.array([0,1.5]),np.array([0,2.5]))
@@ -336,6 +334,8 @@ for it in range(nIter):
     print(it,loss_value)
     if abs(loss_value)<0.01:
         break
+
+
 
 x1=tf.compat.v1.placeholder(tf.float32, shape=[None, x_ic.shape[1]])
 t1=tf.compat.v1.placeholder(tf.float32, shape=[None, x_ic.shape[1]])
