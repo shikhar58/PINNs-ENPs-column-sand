@@ -335,8 +335,6 @@ for it in range(nIter):
     if abs(loss_value)<0.01:
         break
 
-
-
 x1=tf.compat.v1.placeholder(tf.float32, shape=[None, x_ic.shape[1]])
 t1=tf.compat.v1.placeholder(tf.float32, shape=[None, x_ic.shape[1]])
 
